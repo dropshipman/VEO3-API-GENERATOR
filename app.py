@@ -71,8 +71,8 @@ with st.sidebar:
     img_file = st.file_uploader("Upload a PNG/JPEG to animate (optional)", type=["png", "jpg", "jpeg"])    
 
 st.markdown("""
-Paste **one prompt per line** below. You can include audio cues, dialogue in quotes, and shot/camera directions.
-Example: `A moody cyberpunk alleyway at night, slow dolly-in, rain falling; SFX: distant thunder; Dialogue: \"We shouldn't be here.\"`
+Tempelkan **satu perintah per baris** di bawah. Anda dapat menyertakan isyarat audio, dialog dalam tanda kutip, dan arah bidikan/kamera.
+Contoh: `Gang cyberpunk yang murung di malam hari, pergerakan lambat, hujan turun; SFX: guntur jauh; Dialog: \"Kita seharusnya tidak berada di sini.\"`
 """)
 
 raw_prompts = st.text_area("Prompts (one per line)", height=180)
@@ -192,7 +192,7 @@ if "jobs" in st.session_state and st.session_state.jobs:
 st.markdown("""
 ---
 **Tips**
-- Be explicit with *camera moves* (dolly-in, crane, handheld), *lighting*, *mood*, *tempo*, *action beats*, and *audio* cues (Dialogue, SFX, Ambience).
-- Keep in mind Veo 3 currently targets ~8s clips at 24fps 720p. Longer runtimes or higher resolutions are not yet exposed.
-- Generated videos are time-limited on the server; always download your results promptly.
+- Bersikap eksplisit dengan *gerakan kamera* (dolly-in, crane, handheld), *pencahayaan*, *suasana hati*, *tempo*, *ketukan aksi*, dan isyarat *audio* (Dialog, SFX, Ambience).
+- Perlu diingat Veo 3 saat ini menargetkan klip ~8 detik pada 24fps 720p. Waktu proses yang lebih lama atau resolusi yang lebih tinggi belum diekspos.
+- Video yang dihasilkan dibatasi waktu di server; selalu unduh hasil Anda segera.
 """)
