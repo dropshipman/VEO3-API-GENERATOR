@@ -171,8 +171,13 @@ st.title(APP_TITLE)
 with st.sidebar:
     st.header("🔑 API & Model")
     api_key = st.text_input("GEMINI_API_KEY", value=DEFAULT_API_KEY, type="password")
-    model = ui_select("Model", VALID_MODELS, index=0,
-                         help="*Fast* preview lebih cepat/hemat (jika tersedia). Veo 2 tidak ada audio."). Veo 2 tidak ada audio.")
+    model = ui_select(
+    "Model",
+    VALID_MODELS,
+    index=0,
+    help="*Fast* preview lebih cepat/hemat (jika tersedia). Veo 2 tidak ada audio."
+)
+
 
     st.header("🎛️ Parameters")
     aspect_ui = ui_select("Aspect ratio", ["16:9", "9:16", "1:1"], index=0,
