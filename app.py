@@ -1,5 +1,5 @@
 """
-Veo 3 Batch Generator (Gemini API) — Streamlit app
+Veo 3 Generator (fongstudio) — Streamlit app
 
 What this does
 - Simple batch UI to generate multiple Veo 3 videos via the Gemini API
