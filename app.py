@@ -55,7 +55,7 @@ except Exception:
     MOVIEPY_AVAILABLE = False
 
 # ---------- Config ----------
-APP_TITLE = "(fongstudio) Veo 3 Generator"
+APP_TITLE = "Veo 3 Batch Generator (Gemini API)"
 OUTPUT_DIR = Path("outputs")
 OUTPUT_DIR.mkdir(exist_ok=True)
 
@@ -193,12 +193,12 @@ with st.sidebar:
         help="Akan disesuaikan otomatis sesuai model/mode & region."
     )
 
-    st.header("🖼️ Optional image → video")
+        st.header("🖼️ Optional image → video")
     img_file = st.file_uploader("Upload PNG/JPEG (opsional)", type=["png", "jpg", "jpeg"])    
     if img_file is not None:
         st.image(img_file, caption="Preview sumber (image→video)", use_column_width=True)
 
-        st.header("📱 Post-process")
+    st.header("📱 Post-process")
     if MOVIEPY_AVAILABLE:
         auto_to_vertical = st.checkbox(
             "Auto-convert output ke 9:16 (center crop + upscale)",
@@ -212,11 +212,9 @@ with st.sidebar:
             help="1280 cocok untuk vertical 720×1280."
         )
     else:
-        st.info(
-            "Post-process 9:16 nonaktif karena 'moviepy' belum terpasang. Tambahkan ke requirements.txt:
+        st.info("Post-process 9:16 nonaktif karena 'moviepy' belum terpasang. Tambahkan ke requirements.txt:
 - moviepy
-- imageio-ffmpeg"
-        )
+- imageio-ffmpeg")
         auto_to_vertical = False
         target_h = 1280
 
