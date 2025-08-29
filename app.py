@@ -194,7 +194,7 @@ with st.sidebar:
         help="Akan disesuaikan otomatis sesuai model/mode & region."
     )
 
-        st.header("🖼️ Optional image → video")
+    st.header("🖼️ Optional image → video")
     img_file = st.file_uploader("Upload PNG/JPEG (opsional)", type=["png", "jpg", "jpeg"])
 
     st.header("📱 Post-process")
