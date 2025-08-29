@@ -170,9 +170,10 @@ st.title(APP_TITLE)
 
 with st.sidebar:
     st.header("🔑 API & Model")
-    api_key = st.text_input("GEMINI_API_KEY", value=DEFAULT_API_KEY, type="password")
-    model = st.selectbox("Model", VALID_MODELS, index=0,
-                         help="*Fast* preview lebih cepat/hemat (jika tersedia). Veo 2 tidak ada audio.")
+    ...
+    person_choice = st.selectbox(
+        ...
+    )
 
     st.header("🎛️ Parameters")
     aspect_ui = st.selectbox("Aspect ratio", ["16:9", "9:16", "1:1"], index=0,
@@ -193,10 +194,8 @@ with st.sidebar:
         help="Akan disesuaikan otomatis sesuai model/mode & region."
     )
 
-        st.header("🖼️ Optional image → video")
-    img_file = st.file_uploader("Upload PNG/JPEG (opsional)", type=["png", "jpg", "jpeg"])    
-    if img_file is not None:
-        st.image(img_file, caption="Preview sumber (image→video)", use_column_width=True)
+        st.header("🖼️ Optional image → video")   # <-- gunakan 4 spasi, bukan 8
+    img_file = st.file_uploader("Upload PNG/JPEG (opsional)", type=["png", "jpg", "jpeg"])
 
     st.header("📱 Post-process")
     if MOVIEPY_AVAILABLE:
