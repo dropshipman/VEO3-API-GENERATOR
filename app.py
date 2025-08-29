@@ -55,7 +55,7 @@ except Exception:
     MOVIEPY_AVAILABLE = False
 
 # ---------- Config ----------
-APP_TITLE = "(FONGSTUDIO) Veo 3 Generator"
+APP_TITLE = "(fongstudio) Veo 3 Generator"
 OUTPUT_DIR = Path("outputs")
 OUTPUT_DIR.mkdir(exist_ok=True)
 
@@ -198,29 +198,27 @@ with st.sidebar:
     if img_file is not None:
         st.image(img_file, caption="Preview sumber (image→video)", use_column_width=True)
 
-    st.header("📱 Post-process")
-if MOVIEPY_AVAILABLE:
-    auto_to_vertical = st.checkbox(
-        "Auto-convert output ke 9:16 (center crop + upscale)",
-        value=True,
-        help="Untuk Veo 3 yang 16:9, hasil akan dicrop tengah jadi portrait 9:16 (contoh 720×1280)."
-    )
-    target_h = st.select_slider(
-        "Tinggi output 9:16",
-        options=[960, 1280, 1440],
-        value=1280,
-        help="1280 cocok untuk vertical 720×1280."
-    )
-else:
-    st.info(
-        "Post-process 9:16 nonaktif karena 'moviepy' belum terpasang. Tambahkan ke requirements.txt:" 
-        "
-
-moviepy
-imageio-ffmpeg"
-    )
-    auto_to_vertical = False
-    target_h = 1280
+        st.header("📱 Post-process")
+    if MOVIEPY_AVAILABLE:
+        auto_to_vertical = st.checkbox(
+            "Auto-convert output ke 9:16 (center crop + upscale)",
+            value=True,
+            help="Untuk Veo 3 yang 16:9, hasil akan dicrop tengah jadi portrait 9:16 (contoh 720×1280)."
+        )
+        target_h = st.select_slider(
+            "Tinggi output 9:16",
+            options=[960, 1280, 1440],
+            value=1280,
+            help="1280 cocok untuk vertical 720×1280."
+        )
+    else:
+        st.info(
+            "Post-process 9:16 nonaktif karena 'moviepy' belum terpasang. Tambahkan ke requirements.txt:
+- moviepy
+- imageio-ffmpeg"
+        )
+        auto_to_vertical = False
+        target_h = 1280
 
 st.markdown(
     """
