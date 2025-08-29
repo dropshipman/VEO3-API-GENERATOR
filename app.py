@@ -211,9 +211,9 @@ with st.sidebar:
             help="1280 cocok untuk vertical 720×1280."
         )
     else:
-        st.info("Post-process 9:16 nonaktif karena 'moviepy' belum terpasang. Tambahkan ke requirements.txt:\n- moviepy\n- imageio-ffmpeg")
+        st.info("""Post-process 9:16 nonaktif karena 'moviepy' belum terpasang. Tambahkan ke requirements.txt:
 - moviepy
-- imageio-ffmpeg")
+- imageio-ffmpeg""")
         auto_to_vertical = False
         target_h = 1280
 
