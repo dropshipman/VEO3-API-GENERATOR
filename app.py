@@ -71,8 +71,8 @@ with st.sidebar:
     img_file = st.file_uploader("Upload a PNG/JPEG to animate (optional)", type=["png", "jpg", "jpeg"])    
 
 st.markdown("""
-Paste **one prompt per line** below. You can include audio cues, dialogue in quotes, and shot/camera directions.
-Example: `A moody cyberpunk alleyway at night, slow dolly-in, rain falling; SFX: distant thunder; Dialogue: \"We shouldn't be here.\"`
+Paste **Tempelkan **satu perintah per baris** di bawah. Anda dapat menyertakan isyarat audio, dialog dalam tanda kutip, dan arah bidikan/kamera.
+Contoh: `Gang cyberpunk yang murung di malam hari, pergerakan lambat, hujan turun; SFX: guntur jauh; Dialog: \"Kita seharusnya tidak berada di sini.\"`
 """)
 
 raw_prompts = st.text_area("Prompts (one per line)", height=180)
