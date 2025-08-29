@@ -37,7 +37,7 @@ except Exception as e:
     raise
 
 # ---------- Config ----------
-APP_TITLE = "Veo 3 Batch Generator (Gemini API)"
+APP_TITLE = "Veo 3 Generator (FONGSTUDIO)"
 DEFAULT_MODEL = "veo-3.0-generate-preview"
 FAST_MODEL = "veo-3.0-fast-generate-preview"
 VALID_MODELS = [DEFAULT_MODEL, FAST_MODEL]
