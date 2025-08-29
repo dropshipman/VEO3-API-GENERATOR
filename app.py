@@ -7,10 +7,12 @@ What this does
 - Optional image-to-video (one image used for all prompts)
 - Parameters: model, aspect ratio, negative prompt, personGeneration (region-aware)
 - Extra: safer defaults + clearer error diagnostics
+- NEW: Auto-convert Veo 3 16:9 → 9:16 (center crop + upscale)
+- NEW: Show preview of uploaded still image
 
 How to run locally
   export GEMINI_API_KEY=...  # from Google AI Studio (paid) / Vertex
-  pip install streamlit google-genai python-dotenv
+  pip install streamlit google-genai python-dotenv moviepy imageio-ffmpeg
   streamlit run app.py
 
 Notes
@@ -20,6 +22,8 @@ Notes
 """
 
 import os
+import io
+import math
 import time
 from datetime import datetime
 from pathlib import Path
@@ -33,8 +37,11 @@ from google import genai
 from google.genai import types as genai_types
 from google.genai import errors as genai_errors
 
+# Video post-process
+from moviepy.editor import VideoFileClip
+
 # ---------- Config ----------
-APP_TITLE = "Veo 3 Batch Generator (Gemini API)"
+APP_TITLE = "(FONGSTUDIO) Veo 3 Generator"
 OUTPUT_DIR = Path("outputs")
 OUTPUT_DIR.mkdir(exist_ok=True)
 
@@ -79,7 +86,6 @@ def show_api_error(e: Exception):
     """Pretty-print Gemini API errors without letting Streamlit redact the message."""
     if isinstance(e, genai_errors.ClientError):
         code = getattr(e, "status_code", "?")
-        # The SDK stores a JSON body on e.response if available.
         body = getattr(e, "response", None)
         st.error(f"Gemini API ClientError (HTTP {code}). Lihat detail di bawah.")
         if body:
@@ -92,6 +98,51 @@ def show_api_error(e: Exception):
             st.write(str(e))
     else:
         st.error(str(e))
+
+
+def ar_string(w: int, h: int) -> str:
+    g = math.gcd(w, h)
+    return f"{w//g}:{h//g}"
+
+
+def convert_16_9_to_9_16(input_path: str, out_height: int = 1280) -> str:
+    """Center-crop a 16:9 video to 9:16 then upscale to target height (keeps audio)."""
+    clip = VideoFileClip(input_path)
+    w, h = clip.size  # (width, height)
+    # If already portrait-ish, just return same path
+    if w * 16 <= h * 9:
+        clip.close()
+        return input_path
+
+    # Compute crop box: width = h * 9/16, full height
+    crop_w = int(h * 9 / 16)
+    x1 = max(0, (w - crop_w) // 2)
+    x2 = x1 + crop_w
+    cropped = clip.crop(x1=x1, y1=0, x2=x2, y2=h)
+
+    # Resize to target portrait resolution (e.g., 720x1280)
+    target_w = int(out_height * 9 / 16)
+    resized = cropped.resize(newsize=(target_w, out_height))
+
+    # Output path
+    stem = Path(input_path).stem
+    out_path = OUTPUT_DIR / f"{stem}_9x16.mp4"
+
+    # Preserve fps & audio if any
+    fps = clip.fps or 24
+    resized.write_videofile(
+        str(out_path),
+        codec="libx264",
+        audio_codec="aac",
+        fps=fps,
+        preset="medium",
+        threads=2,
+        verbose=False,
+        logger=None,
+    )
+    clip.close()
+    resized.close()
+    return str(out_path)
 
 
 # ---------- UI ----------
@@ -128,6 +179,21 @@ with st.sidebar:
 
     st.header("🖼️ Optional image → video")
     img_file = st.file_uploader("Upload PNG/JPEG (opsional)", type=["png", "jpg", "jpeg"])    
+    if img_file is not None:
+        st.image(img_file, caption="Preview sumber (image→video)", use_column_width=True)
+
+    st.header("📱 Post-process")
+    auto_to_vertical = st.checkbox(
+        "Auto-convert output ke 9:16 (center crop + upscale)",
+        value=True,
+        help="Untuk Veo 3 yang 16:9, hasil akan dicrop tengah jadi portrait 9:16 (contoh 720×1280)."
+    )
+    target_h = st.select_slider(
+        "Tinggi output 9:16",
+        options=[960, 1280, 1440],
+        value=1280,
+        help="1280 cocok untuk vertical 720×1280."
+    )
 
 st.markdown(
     """
@@ -173,8 +239,10 @@ if start_btn:
         # Enforce allowed parameters per model/mode
         has_img = image_bytes is not None
         aspect = coerce_aspect_ratio(model, aspect_ui)
-        effective_person = resolve_person_generation(model, has_img, person_choice,
-                                                     region_mode="EU/UK/CH/MENA" if region_mode.endswith("MENA") else "Default")
+        effective_person = resolve_person_generation(
+            model, has_img, person_choice,
+            region_mode="EU/UK/CH/MENA" if region_mode.endswith("MENA") else "Default"
+        )
 
         if aspect != aspect_ui and model in (VEO3, VEO3_FAST):
             st.warning("Veo 3 Preview saat ini hanya 16:9. Aspect ratio diubah otomatis ke 16:9.")
@@ -221,6 +289,8 @@ if "jobs" in st.session_state and st.session_state.jobs:
         with st.container(border=True):
             st.subheader(f"Job {i+1}")
             st.caption(job["prompt"])            
+            if img_file is not None:
+                st.image(img_file, caption="Preview sumber (image→video)", width=220)
             st.write(f"Operation: `{job.get('operation_name','?')}`")
             try:
                 op = genai_types.GenerateVideosOperation(name=job["operation_name"]) if job.get("operation_name") else None
@@ -254,10 +324,34 @@ if "jobs" in st.session_state and st.session_state.jobs:
                         else:
                             raise
 
-                    st.success("✅ Selesai")
+                    st.success("✅ Selesai (16:9)")
                     st.video(str(save_path))
-                    with open(save_path, "rb") as f:
-                        st.download_button("Download MP4", data=f, file_name=save_path.name, mime="video/mp4")
+                    col1, col2 = st.columns([1,1])
+                    with col1:
+                        with open(save_path, "rb") as f:
+                            st.download_button("Download MP4 (16:9)", data=f, file_name=save_path.name, mime="video/mp4")
+
+                    # Auto convert to 9:16 if requested or if user chose 9:16 but we coerced
+                    need_vertical = auto_to_vertical and (model in (VEO3, VEO3_FAST))
+                    if need_vertical:
+                        try:
+                            st.info("📐 Mengonversi ke 9:16 (center crop + upscale)…")
+                            out_v = convert_16_9_to_9_16(str(save_path), out_height=target_h)
+                            st.success("✅ Selesai (9:16)")
+                            st.video(out_v)
+                            with col2:
+                                with open(out_v, "rb") as f:
+                                    st.download_button("Download MP4 (9:16)", data=f, file_name=Path(out_v).name, mime="video/mp4")
+                            # Show before/after sizes
+                            try:
+                                v = VideoFileClip(out_v)
+                                st.caption(f"Converted size: {v.w}x{v.h} ({ar_string(v.w, v.h)})")
+                                v.close()
+                            except Exception:
+                                pass
+                        except Exception as e:
+                            st.warning("Konversi 9:16 gagal. Lihat detail error di bawah.")
+                            st.exception(e)
 
             except Exception as e:
                 show_api_error(e)
@@ -267,8 +361,9 @@ st.markdown(
 ---
 **Tips**
 - Tambahkan *camera moves*, *lighting*, *mood*, *tempo*, *audio cues* (Dialogue, SFX, Ambience).
-- Veo 3 Preview menargetkan ~8s @ 24fps 720p.
+- Veo 3 Preview menargetkan ~8s @ 24fps 720p (16:9). Opsi 9:16 dilakukan via post-process.
 - Person generation tunduk batasan regional; untuk EU/UK/CH/MENA gunakan "allow_adult". Image→video di Veo 3: wajib "allow_adult".
 - Hasil di server dibersihkan ±2 hari; selalu download.
+- Konversi 9:16 di sini memakai crop tengah + upscale. Untuk framing dinamis/subjek bergerak, pertimbangkan tool reframing berbasis tracking.
     """
 )
