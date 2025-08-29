@@ -15,6 +15,15 @@ How to run locally
   pip install streamlit google-genai python-dotenv moviepy imageio-ffmpeg
   streamlit run app.py
 
+Deploy notes (Streamlit Cloud)
+- Add a **requirements.txt** containing:  
+  `streamlit
+google-genai
+python-dotenv
+moviepy
+imageio-ffmpeg`
+- (Recommended) Add **runtime.txt** with `3.11` to avoid Python 3.13 compatibility issues with moviepy.
+
 Notes
 - Videos are saved to ./outputs with timestamped filenames
 - Errors per item are shown inline without stopping the whole batch
@@ -38,7 +47,12 @@ from google.genai import types as genai_types
 from google.genai import errors as genai_errors
 
 # Video post-process
-from moviepy.editor import VideoFileClip
+# Try optional dependency for post-process (portrait conversion)
+try:
+    from moviepy.editor import VideoFileClip
+    MOVIEPY_AVAILABLE = True
+except Exception:
+    MOVIEPY_AVAILABLE = False
 
 # ---------- Config ----------
 APP_TITLE = "(FONGSTUDIO) Veo 3 Generator"
@@ -107,6 +121,8 @@ def ar_string(w: int, h: int) -> str:
 
 def convert_16_9_to_9_16(input_path: str, out_height: int = 1280) -> str:
     """Center-crop a 16:9 video to 9:16 then upscale to target height (keeps audio)."""
+    if not MOVIEPY_AVAILABLE:
+        raise RuntimeError("moviepy belum terpasang. Tambahkan 'moviepy' & 'imageio-ffmpeg' ke requirements.txt.")
     clip = VideoFileClip(input_path)
     w, h = clip.size  # (width, height)
     # If already portrait-ish, just return same path
@@ -183,6 +199,7 @@ with st.sidebar:
         st.image(img_file, caption="Preview sumber (image→video)", use_column_width=True)
 
     st.header("📱 Post-process")
+if MOVIEPY_AVAILABLE:
     auto_to_vertical = st.checkbox(
         "Auto-convert output ke 9:16 (center crop + upscale)",
         value=True,
@@ -194,6 +211,16 @@ with st.sidebar:
         value=1280,
         help="1280 cocok untuk vertical 720×1280."
     )
+else:
+    st.info(
+        "Post-process 9:16 nonaktif karena 'moviepy' belum terpasang. Tambahkan ke requirements.txt:" 
+        "
+
+moviepy
+imageio-ffmpeg"
+    )
+    auto_to_vertical = False
+    target_h = 1280
 
 st.markdown(
     """
@@ -332,7 +359,7 @@ if "jobs" in st.session_state and st.session_state.jobs:
                             st.download_button("Download MP4 (16:9)", data=f, file_name=save_path.name, mime="video/mp4")
 
                     # Auto convert to 9:16 if requested or if user chose 9:16 but we coerced
-                    need_vertical = auto_to_vertical and (model in (VEO3, VEO3_FAST))
+                    need_vertical = auto_to_vertical and MOVIEPY_AVAILABLE and (model in (VEO3, VEO3_FAST))
                     if need_vertical:
                         try:
                             st.info("📐 Mengonversi ke 9:16 (center crop + upscale)…")
@@ -344,9 +371,13 @@ if "jobs" in st.session_state and st.session_state.jobs:
                                     st.download_button("Download MP4 (9:16)", data=f, file_name=Path(out_v).name, mime="video/mp4")
                             # Show before/after sizes
                             try:
-                                v = VideoFileClip(out_v)
-                                st.caption(f"Converted size: {v.w}x{v.h} ({ar_string(v.w, v.h)})")
-                                v.close()
+                                if MOVIEPY_AVAILABLE:
+                                    v = VideoFileClip(out_v)
+                                else:
+                                    v = None
+                                if v is not None:
+                                    st.caption(f"Converted size: {v.w}x{v.h} ({ar_string(v.w, v.h)})")
+                                    v.close()
                             except Exception:
                                 pass
                         except Exception as e:
