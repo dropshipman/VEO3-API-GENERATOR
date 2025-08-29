@@ -170,24 +170,22 @@ st.title(APP_TITLE)
 
 with st.sidebar:
     st.header("🔑 API & Model")
-    ...
-    person_choice = st.selectbox(
-        ...
-    )
+    api_key = st.text_input("GEMINI_API_KEY", value=DEFAULT_API_KEY, type="password")
+    model = ui_select("Model", VALID_MODELS, index=0,
+                         help="*Fast* preview lebih cepat/hemat (jika tersedia). Veo 2 tidak ada audio."). Veo 2 tidak ada audio.")
 
     st.header("🎛️ Parameters")
-    aspect_ui = st.selectbox("Aspect ratio", ["16:9", "9:16", "1:1"], index=0,
+    aspect_ui = ui_select("Aspect ratio", ["16:9", "9:16", "1:1"], index=0,
                              help="Veo 3 Preview saat ini mendukung 16:9 saja; opsi lain akan dipaksa 16:9.")
     negative_prompt = st.text_input("Negative prompt", value="")
 
-    region_mode = st.selectbox(
+    region_mode = ui_select(
         "Regional compliance",
         ["Default/Global", "EU/UK/CH/MENA"],
         index=0,
         help="Jika audiens kamu di wilayah terbatas, pilih EU/UK/CH/MENA agar parameter people sesuai kebijakan."
     )
-
-    person_choice = st.selectbox(
+    person_choice = ui_select(
         "Requested personGeneration",
         ["allow_all", "allow_adult", "dont_allow"],
         index=0,
@@ -195,7 +193,9 @@ with st.sidebar:
     )
 
     st.header("🖼️ Optional image → video")
-    img_file = st.file_uploader("Upload PNG/JPEG (opsional)", type=["png", "jpg", "jpeg"])
+    img_file = st.file_uploader("Upload PNG/JPEG (opsional)", type=["png", "jpg", "jpeg"])    
+    if img_file is not None:
+        st.image(img_file, caption="Preview sumber (image→video)", use_column_width=True)
 
     st.header("📱 Post-process")
     if MOVIEPY_AVAILABLE:
